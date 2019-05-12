@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router';
 import NumInput from './NumInput.jsx';
+import DateInput from './DateInput.jsx';
 
 export default class IssueEdit extends Component { // eslint-disable-line
   constructor() {
@@ -12,11 +13,13 @@ export default class IssueEdit extends Component { // eslint-disable-line
         status: '',
         owner: '',
         effort: null,
-        completionDate: '',
+        completionDate: null,
         created: '',
       },
+      invalidFields: {},
     };
     this.onChange = this.onChange.bind(this);
+    this.onValidityChange = this.onValidityChange.bind(this);
   }
   componentDidMount() {
     this.loadData();
@@ -25,6 +28,15 @@ export default class IssueEdit extends Component { // eslint-disable-line
     if (prevProps.params.id !== this.props.params.id) {
       this.loadData();
     }
+  }
+  onValidityChange(event, valid) {
+    const invalidFields = Object.assign({}, this.state.invalidFields);
+    if (!valid) {
+      invalidFields[event.target.name] = true;
+    } else {
+      delete invalidFields[event.target.name];
+    }
+    this.setState({ invalidFields });
   }
   onChange(event, convertedValue) {
     const issue = Object.assign({}, this.state.issue);
@@ -41,8 +53,8 @@ export default class IssueEdit extends Component { // eslint-disable-line
         response.json().then(issue => {
           issue.created = new Date(issue.created).toDateString();
           issue.completionDate = issue.completionDate != null
-            ? new Date(issue.completionDate).toDateString()
-            : '';
+            ? new Date(issue.completionDate)
+            : null;
           this.setState({ issue });
         });
       } else {
@@ -56,6 +68,8 @@ export default class IssueEdit extends Component { // eslint-disable-line
   }
   render() {
     const issue = this.state.issue;
+    const validationMessage = Object.keys(this.state.invalidFields).length === 0 ? null
+      : (<div className="error">Please correct invalid fields before submitting.</div>);
     return (
       <div>
         <form>
@@ -77,10 +91,14 @@ export default class IssueEdit extends Component { // eslint-disable-line
           Effort: <NumInput name="effort" size={5} value={issue.effort} onChange={this.onChange} />
           <br />
           Completion Date:
-          <input name="completionDate" value={issue.completionDate} onChange={this.onChange} />
+          <DateInput
+            name="completionDate" value={issue.completionDate} onChange={this.onChange}
+            onValidityChange={this.onValidityChange}
+          />
           <br />
           Title: <input name="title" size={50} value={issue.title} onChange={this.onChange} />
           <br />
+          {validationMessage}
           <button type="submit">Submit</button>
           <Link to="/issues">Back to issues list</Link>
         </form>
