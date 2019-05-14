@@ -9,7 +9,7 @@ const contentNode = document.getElementById('contents');
 const NoMatch = () => <p>Page not found</p>;
 
 const App = (props) => (
-  <div>
+  <div className="container-fluid">
     <div className="header">
       <h1>Issue Tracker</h1>
     </div>

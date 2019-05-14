@@ -3,6 +3,7 @@ import 'whatwg-fetch';
 import IssueAdd from './IssueAdd.jsx';
 import IssueFilter from './IssueFilter.jsx';
 import { Link } from 'react-router';
+import { Button, Glyphicon } from 'react-bootstrap';
 
 const IssueRow = props => {
   function onDeleteClick() {
@@ -22,7 +23,9 @@ const IssueRow = props => {
           : ''}
       </td>
       <td>{props.issue.title}</td>
-      <td><button onClick={onDeleteClick}>Delete</button></td>
+      <td>
+        <Button bsSize="xsmall" onClick={onDeleteClick}><Glyphicon glyph="trash" /></Button>
+      </td>
     </tr>
   );
 };
