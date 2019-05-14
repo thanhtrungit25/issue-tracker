@@ -3,7 +3,7 @@ import 'whatwg-fetch';
 import IssueAdd from './IssueAdd.jsx';
 import IssueFilter from './IssueFilter.jsx';
 import { Link } from 'react-router';
-import { Button, Glyphicon } from 'react-bootstrap';
+import { Button, Glyphicon, Table, Panel } from 'react-bootstrap';
 
 const IssueRow = props => {
   function onDeleteClick() {
@@ -40,7 +40,7 @@ function IssueTable(props) {
     <IssueRow key={issue._id} issue={issue} deleteIssue={props.deleteIssue} />
   ));
   return (
-    <table className="bordered-table">
+    <Table bordered responsive hover condensed>
       <thead>
         <tr>
           <th>Id</th>
@@ -54,7 +54,7 @@ function IssueTable(props) {
         </tr>
       </thead>
       <tbody>{issueRows}</tbody>
-    </table>
+    </Table>
   );
 }
 
@@ -155,7 +155,9 @@ export default class IssueList extends React.Component {
   render() {
     return (
       <div>
-        <IssueFilter initFilter={this.props.location.query} setFilter={this.setFilter} />
+        <Panel collapsible header="Filter">
+          <IssueFilter initFilter={this.props.location.query} setFilter={this.setFilter} />
+        </Panel>
         <hr />
         <IssueTable issues={this.state.issues} deleteIssue={this.deleteIssue} />
         <hr />
