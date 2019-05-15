@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon --watch dist dist/server.js",
-    "start-hook": "nodemon --inspect --watch server server/start_hook.js",
+    "start-hook": "nodemon --inspect -e js,jsx --watch server,src server/start_hook.js",
     "compile-server": "babel server --presets es2015 --out-dir dist --source-maps",
     "watch-server": "babel server --presets es2015 --out-dir dist --source-maps --watch",
     "compile": "webpack",

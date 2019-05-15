@@ -3,10 +3,10 @@ SourceMapSupport.install();
 import 'babel-polyfill';
 
 import express from 'express';
-import path from 'path';
 import bodyParser from 'body-parser';
 import { MongoClient, ObjectID } from 'mongodb';
 import Issue from './issue.js';
+import renderedPageRouter from './renderedPageRouter.jsx';
 
 let db;
 const app = express();
@@ -138,9 +138,11 @@ app.delete('/api/issues/:id', (req, res) => {
   });
 });
 
-app.get('*', (req, res) => {
-  res.sendFile(path.resolve('static/index.html'));
-});
+// app.get('*', (req, res) => {
+//   res.sendFile(path.resolve('static/index.html'));
+// });
+
+app.use('/', renderedPageRouter);
 
 MongoClient.connect('mongodb://localhost:27017')
   .then(client => {
