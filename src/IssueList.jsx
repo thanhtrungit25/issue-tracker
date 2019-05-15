@@ -1,6 +1,5 @@
 import React from 'react';
 import 'whatwg-fetch';
-import IssueAdd from './IssueAdd.jsx';
 import IssueFilter from './IssueFilter.jsx';
 import { Link } from 'react-router';
 import { Button, Glyphicon, Table, Panel } from 'react-bootstrap';
@@ -68,7 +67,6 @@ export default class IssueList extends React.Component {
     super();
     this.state = { issues: [] };
 
-    this.createIssue = this.createIssue.bind(this);
     this.setFilter = this.setFilter.bind(this);
     this.deleteIssue = this.deleteIssue.bind(this);
   }
@@ -114,37 +112,6 @@ export default class IssueList extends React.Component {
       });
   }
 
-  createIssue(newIssue) {
-    // newIssue - owner, title
-    fetch('/api/issues', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newIssue),
-    })
-      .then(response => {
-        if (response.ok) {
-          response.json().then(updateeIssue => {
-            updateeIssue.created = new Date(updateeIssue.created);
-            if (updateeIssue.completionDate) {
-              updateeIssue.completionDate = new Date(
-                updateeIssue.completionDate
-              );
-            }
-
-            const newIssues = this.state.issues.concat(updateeIssue);
-            this.setState({ issues: newIssues });
-          });
-        } else {
-          response.json().then(error => {
-            alert(`Failed to add issue: ${error.message}`);
-          });
-        }
-      })
-      .catch(err => {
-        alert(`Error in sending data from server: ${err.message}`);
-      });
-  }
-
   deleteIssue(id) {
     fetch(`/api/issues/${id}`, { method: 'DELETE' }).then(response => {
       if (!response.ok) alert('Failed to delete issue');
@@ -160,8 +127,6 @@ export default class IssueList extends React.Component {
         </Panel>
         <hr />
         <IssueTable issues={this.state.issues} deleteIssue={this.deleteIssue} />
-        <hr />
-        <IssueAdd createIssue={this.createIssue} />
       </div>
     );
   }
