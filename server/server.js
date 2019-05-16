@@ -138,10 +138,6 @@ app.delete('/api/issues/:id', (req, res) => {
   });
 });
 
-// app.get('*', (req, res) => {
-//   res.sendFile(path.resolve('static/index.html'));
-// });
-
 app.use('/', renderedPageRouter);
 
 MongoClient.connect('mongodb://localhost:27017')
