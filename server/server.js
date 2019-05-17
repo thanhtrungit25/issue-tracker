@@ -19,18 +19,40 @@ app.get('/api/issues', (req, res) => {
   if (req.query.effort_gte) {
     filter.effort.$gte = parseInt(req.query.effort_gte, 10);
   }
-
-  db.collection('issues')
-    .find(filter)
-    .toArray()
-    .then(issues => {
-      const metadata = { total_count: issues.length };
-      res.json({ _metadata: metadata, records: issues });
+  if (req.query._summary === undefined) {
+    let limit = req.query._limit ? parseFloat(req.query._limit, 10) : 20;
+    if (limit > 50) limit = 50;
+    db.collection('issues').find(filter).limit(limit)
+      .toArray()
+      .then(issues => {
+        const metadata = { total_count: issues.length };
+        res.json({ _metadata: metadata, records: issues });
+      })
+      .catch(err => {
+        console.log(err);
+        res.status(500).json({ message: `Internal Server Error: ${err}` });
+      });
+  } else {
+    db.collection('issues').aggregate([
+      { $match: filter },
+      { $group: {
+        _id: { owner: '$owner', status: '$status' },
+        count: { $sum: 1 } },
+      },
+    ]).toArray()
+    .then(results => {
+      const stats = {};
+      results.forEach(result => {
+        if (!stats[result._id.owner]) stats[result._id.owner] = {};
+        stats[result._id.owner][result._id.status] = result.count;
+      });
+      res.json(stats);
     })
-    .catch(err => {
-      console.log(err);
-      res.status(500).json({ message: `Internal Server Error: ${err}` });
+    .catch(error => {
+      console.log(error);
+      res.status(500).json({ message: `Internal Server Error: ${error}` });
     });
+  }
 });
 
 app.post('/api/issues', (req, res) => {
