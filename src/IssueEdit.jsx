@@ -9,18 +9,34 @@ import DateInput from './DateInput.jsx';
 import Toast from './Toast.jsx';
 
 export default class IssueEdit extends Component { // eslint-disable-line
-  constructor() {
-    super();
+  static dataFecher({ params, urlBase }) {
+    return fetch(`${urlBase || ''}/api/issues/${params.id}`).then(
+      (response) => {
+        if (!response.ok) {
+          return response.json().then(error => Promise.reject(error));
+        }
+        return response.json().then(data => ({ IssueEdit: data }));
+      }
+    );
+  }
+
+  constructor(props, context) {
+    super(props, context);
+    let issue;
+    if (context.initialState.IssueEdit) {
+      issue = context.initialState.IssueEdit;
+      issue.created = new Date(issue.created);
+      issue.completionDate = issue.completionDate != null ? new Date(issue.completionDate) : null;
+      if (!issue.effort) issue.effort = 0;
+    } else {
+      issue = {
+        _id: '', title: '', status: '', owner: '', effort: null,
+        completionDate: null, created: null,
+      };
+    }
+
     this.state = {
-      issue: {
-        _id: '',
-        title: '',
-        status: '',
-        owner: '',
-        effort: null,
-        completionDate: null,
-        created: '',
-      },
+      issue,
       invalidFields: {},
       showValidation: false,
       toastVisible: false,
@@ -92,24 +108,18 @@ export default class IssueEdit extends Component { // eslint-disable-line
     });
   }
   loadData() {
-    fetch(`/api/issues/${this.props.params.id}`).then(response => {
-      if (response.ok) {
-        response.json().then(issue => {
-          issue.created = new Date(issue.created);
-          issue.completionDate = issue.completionDate != null
-            ? new Date(issue.completionDate)
-            : null;
-          if (!issue.effort) issue.effort = 0;
-          this.setState({ issue });
-        });
-      } else {
-        response.json().then(error => {
-          this.showError(`Failed to fetch issue: ${error.message}`);
-        });
-      }
-    }).catch(err => {
-      this.showError(`Error is fetching data from server: ${err.message}`);
-    });
+    IssueEdit.dataFecher({ params: this.props.params })
+      .then(data => {
+        const issue = data.IssueEdit;
+        issue.created = new Date(issue.created);
+        issue.completionDate = issue.completionDate != null
+          ? new Date(issue.completionDate)
+          : null;
+        if (!issue.effort) issue.effort = 0;
+        this.setState({ issue });
+      }).catch(err => {
+        this.showError(`Error is fetching data from server: ${err.message}`);
+      });
   }
   showValidation() {
     this.setState({ showValidation: true });
@@ -233,6 +243,10 @@ export default class IssueEdit extends Component { // eslint-disable-line
     );
   }
 }
+
+IssueEdit.contextTypes = {
+  initialState: React.PropTypes.object,
+};
 
 IssueEdit.propTypes = {
   params: React.PropTypes.object.isRequired,

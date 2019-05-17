@@ -7,7 +7,7 @@ module.exports = {
       'react',
       'react-dom',
       'whatwg-fetch',
-      'babel-polyfill',
+      'isomorphic-fetch',
       'react-router',
       'react-bootstrap',
       'react-router-bootstrap',

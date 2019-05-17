@@ -1,5 +1,5 @@
 import React from 'react';
-import 'whatwg-fetch';
+import 'isomorphic-fetch';
 import IssueFilter from './IssueFilter.jsx';
 import { Link } from 'react-router';
 import { Button, Glyphicon, Table, Panel } from 'react-bootstrap';
@@ -10,7 +10,7 @@ const IssueRow = props => {
   }
   return (
     <tr>
-      <td><Link to={`/issue/${props.issue._id}`}>
+      <td><Link to={`/issues/${props.issue._id}`}>
         {props.issue._id.substr(-4)}</Link></td>
       <td>{props.issue.status}</td>
       <td>{props.issue.owner}</td>
@@ -63,9 +63,30 @@ IssueTable.propTypes = {
 };
 
 export default class IssueList extends React.Component {
-  constructor() {
-    super();
-    this.state = { issues: [] };
+  static dataFetcher({ location, urlBase }) {
+    return fetch(`${urlBase || ''}/api/issues${location.search}`)
+      .then(response => {
+        if (!response.ok) {
+          return response.json().then(error => Promise.reject(error));
+        }
+        return response.json().then(data => Promise.resolve({ IssueList: data }));
+      });
+  }
+
+  constructor(props, context) {
+    super(props, context);
+    const issues = context.initialState.IssueList ?
+      context.initialState.IssueList.records : [];
+    issues.forEach(issue => {
+      issue.created = new Date(issue.created);
+      if (issue.completionDate) {
+        issue.completionDate = new Date(issue.completionDate);
+      }
+    });
+
+    this.state = {
+      issues,
+    };
 
     this.setFilter = this.setFilter.bind(this);
     this.deleteIssue = this.deleteIssue.bind(this);
@@ -91,24 +112,35 @@ export default class IssueList extends React.Component {
   }
 
   loadData() {
-    fetch(`/api/issues${this.props.location.search}`)
-      .then(response => {
-        if (response.ok) {
-          response.json().then(data => {
-            data.records.forEach(issue => {
-              issue.created = new Date(issue.created);
-              if (issue.completionDate) issue.completionDate = new Date(issue.completionDate);
-            });
-            this.setState({ issues: data.records });
-          });
-        } else {
-          response.json().then(error => {
-            alert(`Failed to fetch issues: ${error.message}`);
-          });
-        }
-      })
-      .catch(err => {
-        alert('Error in fetching data from server', err);
+    // fetch(`/api/issues${this.props.location.search}`)
+    //   .then(response => {
+    //     if (response.ok) {
+    //       response.json().then(data => {
+    //         data.records.forEach(issue => {
+    //           issue.created = new Date(issue.created);
+    //           if (issue.completionDate) issue.completionDate = new Date(issue.completionDate);
+    //         });
+    //         this.setState({ issues: data.records });
+    //       });
+    //     } else {
+    //       response.json().then(error => {
+    //         alert(`Failed to fetch issues: ${error.message}`);
+    //       });
+    //     }
+    //   })
+    //   .catch(err => {
+    //     alert('Error in fetching data from server', err);
+    //   });
+    IssueList.dataFetcher({ location: this.props.location })
+      .then(data => {
+        const issues = data.IssueList.records;
+        issues.forEach(issue => {
+          issue.created = new Date(issue.created);
+          if (issue.completionDate) issue.completionDate = new Date(issue.completionDate);
+        });
+        this.setState({ issues });
+      }).catch(err => {
+        alert(`Error in fetching data from server: ${err}`);
       });
   }
 
@@ -131,6 +163,10 @@ export default class IssueList extends React.Component {
     );
   }
 }
+
+IssueList.contextTypes = {
+  initialState: React.PropTypes.object,
+};
 
 IssueList.propTypes = {
   location: React.PropTypes.object.isRequired,
