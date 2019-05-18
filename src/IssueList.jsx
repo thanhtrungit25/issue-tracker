@@ -2,7 +2,7 @@ import React from 'react';
 import 'isomorphic-fetch';
 import IssueFilter from './IssueFilter.jsx';
 import { Link } from 'react-router';
-import { Button, Glyphicon, Table, Panel } from 'react-bootstrap';
+import { Button, Glyphicon, Table, Panel, Pagination } from 'react-bootstrap';
 
 const IssueRow = props => {
   function onDeleteClick() {
@@ -62,34 +62,49 @@ IssueTable.propTypes = {
   deleteIssue: React.PropTypes.func.isRequired,
 };
 
+const PAGE_SIZE = 10;
+
 export default class IssueList extends React.Component {
   static dataFetcher({ location, urlBase }) {
-    return fetch(`${urlBase || ''}/api/issues${location.search}`)
+    const query = Object.assign({}, location.query);
+    const pageStr = query._page;
+    if (pageStr) {
+      delete query._page;
+      query._offset = (parseInt(pageStr, 10) - 1) * PAGE_SIZE;
+    }
+    query._limit = PAGE_SIZE;
+    const search = Object.keys(query).map(k => `${k}=${query[k]}`).join('&');
+
+    return fetch(`${urlBase || ''}/api/issues?${search}`)
       .then(response => {
         if (!response.ok) {
           return response.json().then(error => Promise.reject(error));
         }
-        return response.json().then(data => Promise.resolve({ IssueList: data }));
+        return response.json().then(data => ({ IssueList: data }));
       });
   }
 
   constructor(props, context) {
     super(props, context);
-    const issues = context.initialState.IssueList ?
-      context.initialState.IssueList.records : [];
+    const data = context.initialState.IssueList
+      ? context.initialState.IssueList
+      : { metadata: { totalCount: 0 }, records: [] };
+
+    const issues = data.records;
     issues.forEach(issue => {
       issue.created = new Date(issue.created);
       if (issue.completionDate) {
         issue.completionDate = new Date(issue.completionDate);
       }
     });
-
     this.state = {
       issues,
+      totalCount: data.metadata.totalCount,
     };
 
     this.setFilter = this.setFilter.bind(this);
     this.deleteIssue = this.deleteIssue.bind(this);
+    this.selectPage = this.selectPage.bind(this);
   }
 
   componentDidMount() {
@@ -101,7 +116,8 @@ export default class IssueList extends React.Component {
     const newQuery = this.props.location.query;
     if (oldQuery.status === newQuery.status
       && oldQuery.effort_gte === newQuery.effort_gte
-      && oldQuery.effort_lte === newQuery.effort_lte) {
+      && oldQuery.effort_lte === newQuery.effort_lte
+      && oldQuery._page === newQuery._page) {
       return;
     }
     this.loadData();
@@ -112,25 +128,6 @@ export default class IssueList extends React.Component {
   }
 
   loadData() {
-    // fetch(`/api/issues${this.props.location.search}`)
-    //   .then(response => {
-    //     if (response.ok) {
-    //       response.json().then(data => {
-    //         data.records.forEach(issue => {
-    //           issue.created = new Date(issue.created);
-    //           if (issue.completionDate) issue.completionDate = new Date(issue.completionDate);
-    //         });
-    //         this.setState({ issues: data.records });
-    //       });
-    //     } else {
-    //       response.json().then(error => {
-    //         alert(`Failed to fetch issues: ${error.message}`);
-    //       });
-    //     }
-    //   })
-    //   .catch(err => {
-    //     alert('Error in fetching data from server', err);
-    //   });
     IssueList.dataFetcher({ location: this.props.location })
       .then(data => {
         const issues = data.IssueList.records;
@@ -138,12 +135,15 @@ export default class IssueList extends React.Component {
           issue.created = new Date(issue.created);
           if (issue.completionDate) issue.completionDate = new Date(issue.completionDate);
         });
-        this.setState({ issues });
+        this.setState({ issues, totalCount: data.IssueList.metadata.totalCount });
       }).catch(err => {
         alert(`Error in fetching data from server: ${err}`);
       });
   }
-
+  selectPage(eventKey) {
+    const query = Object.assign(this.props.location.query, { _page: eventKey });
+    this.props.router.push({ pathname: this.props.location.pathname, query });
+  }
   deleteIssue(id) {
     fetch(`/api/issues/${id}`, { method: 'DELETE' }).then(response => {
       if (!response.ok) alert('Failed to delete issue');
@@ -158,6 +158,13 @@ export default class IssueList extends React.Component {
           <IssueFilter initFilter={this.props.location.query} setFilter={this.setFilter} />
         </Panel>
         <hr />
+        <Pagination
+          items={Math.ceil(this.state.totalCount / PAGE_SIZE)}
+          activePage={parseInt(this.props.location.query._page || '1', 10)}
+          maxButtons={7}
+          next prev boundaryLinks
+          onSelect={this.selectPage}
+        />
         <IssueTable issues={this.state.issues} deleteIssue={this.deleteIssue} />
       </div>
     );

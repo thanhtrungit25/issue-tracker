@@ -1,4 +1,7 @@
 {
+  "rules": {
+    "no-underscore-dangle": "off"
+  },
   "env": {
     "browser": true
   }
