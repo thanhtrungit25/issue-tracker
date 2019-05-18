@@ -6,9 +6,9 @@ import {
 import { LinkContainer } from 'react-router-bootstrap';
 import NumInput from './NumInput.jsx';
 import DateInput from './DateInput.jsx';
-import Toast from './Toast.jsx';
+import withToast from './withToast.jsx';
 
-export default class IssueEdit extends Component { // eslint-disable-line
+class IssueEdit extends Component { // eslint-disable-line
   static dataFecher({ params, urlBase }) {
     return fetch(`${urlBase || ''}/api/issues/${params.id}`).then(
       (response) => {
@@ -38,19 +38,12 @@ export default class IssueEdit extends Component { // eslint-disable-line
     this.state = {
       issue,
       invalidFields: {},
-      showValidation: false,
-      toastVisible: false,
-      toastMessage: '',
-      toastType: 'success',
     };
     this.onChange = this.onChange.bind(this);
     this.onValidityChange = this.onValidityChange.bind(this);
     this.onSubmit = this.onSubmit.bind(this);
     this.showValidation = this.showValidation.bind(this);
     this.dismissValidation = this.dismissValidation.bind(this);
-    this.showSuccess = this.showSuccess.bind(this);
-    this.showError = this.showError.bind(this);
-    this.dismissToast = this.dismissToast.bind(this);
   }
   componentDidMount() {
     this.loadData();
@@ -96,15 +89,15 @@ export default class IssueEdit extends Component { // eslint-disable-line
             updatedIssue.completionDate = new Date(updatedIssue.completionDate);
           }
           this.setState({ issue: updatedIssue });
-          this.showSuccess('Updated issue successfully.');
+          this.props.showSuccess('Updated issue successfully.');
         });
       } else {
         response.json().then(error => {
-          this.showError(`Failed to update issue: ${error.message}`);
+          this.props.showError(`Failed to update issue: ${error.message}`);
         });
       }
     }).catch(err => {
-      this.showError(`Error in sending data to server: ${err.message}`);
+      this.props.showError(`Error in sending data to server: ${err.message}`);
     });
   }
   loadData() {
@@ -118,7 +111,7 @@ export default class IssueEdit extends Component { // eslint-disable-line
         if (!issue.effort) issue.effort = 0;
         this.setState({ issue });
       }).catch(err => {
-        this.showError(`Error is fetching data from server: ${err.message}`);
+        this.props.showError(`Error is fetching data from server: ${err.message}`);
       });
   }
   showValidation() {
@@ -126,15 +119,6 @@ export default class IssueEdit extends Component { // eslint-disable-line
   }
   dismissValidation() {
     this.setState({ showValidation: false });
-  }
-  showSuccess(message) {
-    this.setState({ toastVisible: true, toastMessage: message, toastType: 'success' });
-  }
-  showError(message) {
-    this.setState({ toastVisible: true, toastMessage: message, toastType: 'danger' });
-  }
-  dismissToast() {
-    this.setState({ toastVisible: false });
   }
   render() {
     const issue = this.state.issue;
@@ -233,12 +217,6 @@ export default class IssueEdit extends Component { // eslint-disable-line
             <Col smOffset={3} sm={9}>{validationMessage}</Col>
           </FormGroup>
         </Form>
-        <Toast
-          showing={this.state.toastVisible}
-          message={this.state.toastMessage}
-          onDismiss={this.dismissToast}
-          bsStyle={this.state.bsStyle}
-        />
       </Panel>
     );
   }
@@ -250,4 +228,11 @@ IssueEdit.contextTypes = {
 
 IssueEdit.propTypes = {
   params: React.PropTypes.object.isRequired,
+  showError: React.PropTypes.func.isRequired,
+  showSuccess: React.PropTypes.func.isRequired,
 };
+
+const IssueEditWithToast = withToast(IssueEdit);
+IssueEditWithToast.dataFecher = IssueEdit.dataFecher;
+
+export default IssueEditWithToast;

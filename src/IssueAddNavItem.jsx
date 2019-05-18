@@ -2,21 +2,15 @@ import React, { Component } from 'react';
 import { withRouter } from 'react-router';
 import { NavItem, Glyphicon, Modal,
   Form, FormGroup, ControlLabel, FormControl, ButtonToolbar, Button } from 'react-bootstrap';
-import Toast from './Toast.jsx';
 
 class IssueAddNavItem extends Component {
   constructor(props) {
     super(props);
     this.state = {
       showing: false,
-      toastVisible: false,
-      toastMessage: '',
-      toastType: 'success',
     };
     this.showModal = this.showModal.bind(this);
     this.hideModal = this.hideModal.bind(this);
-    this.showError = this.showError.bind(this);
-    this.dismissToast = this.dismissToast.bind(this);
     this.submit = this.submit.bind(this);
   }
   showModal() {
@@ -24,12 +18,6 @@ class IssueAddNavItem extends Component {
   }
   hideModal() {
     this.setState({ showing: false });
-  }
-  showError(message) {
-    this.setState({ toastVisible: true, toastMessage: message, toastType: 'danger' });
-  }
-  dismissToast() {
-    this.setState({ toastVisible: false });
   }
   submit(e) {
     e.preventDefault();
@@ -52,11 +40,11 @@ class IssueAddNavItem extends Component {
         });
       } else {
         response.json().then(error => {
-          this.showError(`Failed to add issue: ${error.message}`);
+          this.props.showError(`Failed to add issue: ${error.message}`);
         });
       }
     }).catch(err => {
-      this.showError(`Error is sending data to server: ${err.message}`);
+      this.props.showError(`Error is sending data to server: ${err.message}`);
     });
   }
   render() {
@@ -85,12 +73,6 @@ class IssueAddNavItem extends Component {
             </ButtonToolbar>
           </Modal.Footer>
         </Modal>
-        <Toast
-          showing={this.state.toastVisible}
-          bsStyle={this.state.toastType}
-          message={this.state.toastMessage}
-          onDismiss={this.dismissToast}
-        />
       </NavItem>
     );
   }
@@ -98,6 +80,7 @@ class IssueAddNavItem extends Component {
 
 IssueAddNavItem.propTypes = {
   router: React.PropTypes.object,
+  showError: React.PropTypes.func.isRequired,
 };
 
 export default withRouter(IssueAddNavItem);

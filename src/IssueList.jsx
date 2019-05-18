@@ -3,6 +3,7 @@ import 'isomorphic-fetch';
 import IssueFilter from './IssueFilter.jsx';
 import { Link } from 'react-router';
 import { Button, Glyphicon, Table, Panel, Pagination } from 'react-bootstrap';
+import withToast from './withToast.jsx';
 
 const IssueRow = props => {
   function onDeleteClick() {
@@ -64,7 +65,7 @@ IssueTable.propTypes = {
 
 const PAGE_SIZE = 10;
 
-export default class IssueList extends React.Component {
+class IssueList extends React.Component {
   static dataFetcher({ location, urlBase }) {
     const query = Object.assign({}, location.query);
     const pageStr = query._page;
@@ -137,7 +138,7 @@ export default class IssueList extends React.Component {
         });
         this.setState({ issues, totalCount: data.IssueList.metadata.totalCount });
       }).catch(err => {
-        alert(`Error in fetching data from server: ${err}`);
+        this.props.showError(`Error in fetching data from server: ${err}`);
       });
   }
   selectPage(eventKey) {
@@ -146,8 +147,11 @@ export default class IssueList extends React.Component {
   }
   deleteIssue(id) {
     fetch(`/api/issues/${id}`, { method: 'DELETE' }).then(response => {
-      if (!response.ok) alert('Failed to delete issue');
-      else this.loadData();
+      if (!response.ok) {
+        this.props.showError('Failed to delete issue');
+      } else {
+        this.loadData();
+      }
     });
   }
 
@@ -178,4 +182,11 @@ IssueList.contextTypes = {
 IssueList.propTypes = {
   location: React.PropTypes.object.isRequired,
   router: React.PropTypes.object,
+  showError: React.PropTypes.func.isRequired,
+  showSuccess: React.PropTypes.func.isRequired,
 };
+
+const IssueListWithToast = withToast(IssueList);
+IssueListWithToast.dataFetcher = IssueList.IssueList;
+
+export default IssueListWithToast;
