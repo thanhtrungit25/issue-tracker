@@ -1,9 +1,10 @@
 import React from 'react';
-import { Navbar, Nav, NavItem, NavDropdown, MenuItem, Glyphicon, Col } from 'react-bootstrap';
+import { Navbar, Nav, NavItem, Col } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
 import Select from 'react-select';
 
 import IssueAddNavItem from './IssueAddNavItem.jsx';
+import SignInNavItem from './SignInNavItem.jsx';
 import withToast from './withToast.jsx';
 import { withRouter } from 'react-router';
 
@@ -60,9 +61,13 @@ const Header = (props) => {
       <Col sm={3}>
         <Nav pullRight>
           <IssueAddNavItem showError={props.showError} />
-          <NavDropdown id="user-dropdown" title={<Glyphicon glyph="option-horizontal" />} noCaret>
-            <MenuItem>Logout</MenuItem>
-          </NavDropdown>
+          <SignInNavItem
+            user={props.user}
+            showError={props.showError}
+            showSuccess={props.showSuccess}
+            onSignin={props.onSignin}
+            onSignout={props.onSignout}
+          />
         </Nav>
       </Col>
     </Navbar>
@@ -71,7 +76,11 @@ const Header = (props) => {
 
 Header.propTypes = {
   showError: React.PropTypes.func.isRequired,
+  showSuccess: React.PropTypes.func.isRequired,
+  onSignin: React.PropTypes.func.isRequired,
+  onSignout: React.PropTypes.func.isRequired,
   router: React.PropTypes.object.isRequired,
+  user: React.PropTypes.object.isRequired,
 };
 
 export default withRouter(withToast(Header));
