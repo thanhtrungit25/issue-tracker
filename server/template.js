@@ -7,6 +7,7 @@ export default function template(body, initialState) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pro MERN Stack</title>
   <link rel="stylesheet" href="/bootstrap/css/bootstrap.min.css" >
+  <link rel="stylesheet" href="/react-select/react-select.css" >
   <style>
     .panel-title a {display: block; width: 100%; cursor: pointer; }
   </style>
