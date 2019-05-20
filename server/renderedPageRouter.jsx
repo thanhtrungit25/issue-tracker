@@ -22,6 +22,7 @@ renderedPageRouter.get('*', (req, res) => {
         params: renderProps.params,
         location: renderProps.location,
         urlBase: 'http://localhost:3000',
+        cookie: req.headers.cookie,
       }));
       Promise.all(dataFetchers).then((dataList) => {
         let initialState = {};

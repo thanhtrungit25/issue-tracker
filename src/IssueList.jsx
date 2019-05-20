@@ -23,16 +23,18 @@ const IssueRow = props => {
           : ''}
       </td>
       <td>{props.issue.title}</td>
-      <td>
-        <Button bsSize="xsmall" onClick={onDeleteClick}><Glyphicon glyph="trash" /></Button>
-      </td>
+      {props.deleteIssue ? (
+        <td>
+          <Button bsSize="xsmall" onClick={onDeleteClick}><Glyphicon glyph="trash" /></Button>
+        </td>
+      ) : null}
     </tr>
   );
 };
 
 IssueRow.propTypes = {
   issue: React.PropTypes.object.isRequired,
-  deleteIssue: React.PropTypes.func.isRequired,
+  deleteIssue: React.PropTypes.func,
 };
 
 function IssueTable(props) {
@@ -50,7 +52,7 @@ function IssueTable(props) {
           <th>Effort</th>
           <th>Completion Date</th>
           <th>Title</th>
-          <th></th>
+          {props.deleteIssue ? <th></th> : null}
         </tr>
       </thead>
       <tbody>{issueRows}</tbody>
@@ -60,7 +62,7 @@ function IssueTable(props) {
 
 IssueTable.propTypes = {
   issues: React.PropTypes.array.isRequired,
-  deleteIssue: React.PropTypes.func.isRequired,
+  deleteIssue: React.PropTypes.func,
 };
 
 const PAGE_SIZE = 10;
@@ -169,7 +171,10 @@ class IssueList extends React.Component {
           next prev boundaryLinks
           onSelect={this.selectPage}
         />
-        <IssueTable issues={this.state.issues} deleteIssue={this.deleteIssue} />
+        <IssueTable
+          issues={this.state.issues}
+          deleteIssue={this.props.user.signedIn ? this.deleteIssue : null}
+        />
       </div>
     );
   }
@@ -182,6 +187,7 @@ IssueList.contextTypes = {
 IssueList.propTypes = {
   location: React.PropTypes.object.isRequired,
   router: React.PropTypes.object,
+  user: React.PropTypes.object,
   showError: React.PropTypes.func.isRequired,
   showSuccess: React.PropTypes.func.isRequired,
 };

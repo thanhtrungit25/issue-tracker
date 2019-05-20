@@ -1,6 +1,7 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import { ObjectID } from 'mongodb';
+import session from 'express-session';
 import Issue from './issue.js';
 import renderedPageRouter from './renderedPageRouter.jsx';
 
@@ -8,6 +9,56 @@ let db;
 const app = express();
 app.use(express.static('static'));
 app.use(bodyParser.json());
+app.use(session({ secret: 'sdf0h2342', resave: false, saveUninitialized: true }));
+
+app.all('/api/*', (req, res, next) => {
+  if (req.method === 'DELETE' || req.method === 'POST' || req.method === 'PUT') {
+    if (!req.session || !req.session.user) {
+      res.status(403).send({
+        message: 'You are not authorized to perform the operation',
+      });
+    } else {
+      next();
+    }
+  } else {
+    next();
+  }
+});
+
+app.get('/api/users/me', (req, res) => {
+  if (req.session && req.session.user) {
+    res.json(req.session.user);
+  } else {
+    res.json({ signedIn: false, name: '' });
+  }
+});
+
+app.post('/signin', (req, res) => {
+  if (!req.body.id_token) {
+    res.status(400).send({ code: 400, message: 'Missing Token.' });
+    return;
+  }
+  fetch(`https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=${req.body.id_token}`)
+    .then(response => {
+      if (!response.ok) response.json().then(error => Promise.reject(error));
+      response.json().then(data => {
+        req.session.user = {
+          signedIn: true,
+          name: data.given_name,
+        };
+        res.json(req.session.user);
+      });
+    })
+    .catch(error => {
+      console.log(error);
+      res.status(500).json({ message: `Internal Server Error: ${error}` });
+    });
+});
+
+app.post('/signout', (req, res) => {
+  if (req.session) req.session.destroy();
+  res.json({ status: 'ok' });
+});
 
 app.get('/api/issues', (req, res) => {
   const filter = {};

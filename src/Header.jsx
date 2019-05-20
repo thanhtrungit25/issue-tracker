@@ -60,7 +60,7 @@ const Header = (props) => {
       </Col>
       <Col sm={3}>
         <Nav pullRight>
-          <IssueAddNavItem showError={props.showError} />
+          {props.user.signedIn ? <IssueAddNavItem showError={props.showError} /> : null}
           <SignInNavItem
             user={props.user}
             showError={props.showError}

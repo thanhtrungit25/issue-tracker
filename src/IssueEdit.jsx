@@ -206,7 +206,9 @@ class IssueEdit extends Component { // eslint-disable-line
           <FormGroup>
             <Col smOffset={3} sm={6}>
               <ButtonToolbar>
-                <Button bsStyle="primary" type="submit">Submit</Button>
+                <Button bsStyle="primary" type="submit" disabled={!this.props.user.signedIn}>
+                  Submit
+                </Button>
                 <LinkContainer to="/issues">
                   <Button bsStyle="link">Back to issues list</Button>
                 </LinkContainer>
@@ -228,6 +230,7 @@ IssueEdit.contextTypes = {
 
 IssueEdit.propTypes = {
   params: React.PropTypes.object.isRequired,
+  user: React.PropTypes.object.isRequired,
   showError: React.PropTypes.func.isRequired,
   showSuccess: React.PropTypes.func.isRequired,
 };
